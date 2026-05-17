@@ -2,15 +2,6 @@
 
 一款基于 Android 的多模态情绪记录应用，通过融合手机传感器数据与云端语音识别，实现智能化的情绪检测与分析。
 
-<div align="center">
-  <img src="image/effect.png" width="80%" alt="应用效果"/>
-</div>
-
-## 设计思路
-
-<div align="center">
-  <img src="image/theory.png" width="80%" alt="设计思路"/>
-</div>
 
 ## 核心功能
 
