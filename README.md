@@ -1,61 +1,105 @@
-# SensorDiary (传感器情绪日记)
+# 传感器情绪日记
 
-SensorDiary 是一款基于 Android 的创新应用，旨在通过结合环境传感器数据（如光照强度、噪声、抖频等）来记录和分析用户的每日情绪。
-
-## 📱 真机效果
+一款基于 Android 的多模态情绪记录应用，通过融合手机传感器数据与云端语音识别，实现智能化的情绪检测与分析。
 
 <div align="center">
-  <img src="image/effect.png" width="80%" alt="CiLin App Effect"/>
+  <img src="image/effect.png" width="80%" alt="应用效果"/>
 </div>
 
-## 📄 项目地址
-
-> 代码地址：https://github.com/luoxjcode/SensorDiary
-
-> 体验地址：https://share.feijipan.com/s/7n3kQLEg
-
-## 🤔 设计思路
+## 设计思路
 
 <div align="center">
-  <img src="image/theory.png" width="80%" alt="CiLin App Effect"/>
+  <img src="image/theory.png" width="80%" alt="设计思路"/>
 </div>
 
-## 🌟 主要功能
+## 核心功能
 
-- **传感器数据采集**：实时监测手机传感器和麦克风音量等数据，为情绪记录提供背景上下文。
-- **情绪记录系统**：简单直观的界面，允许用户记录当前心情，并自动关联当前的传感器数据。
-- **数据分析与可视化**：提供情绪趋势图表，帮助用户发现环境因素与心理状态之间的潜在联系。
-- **存储安全**：检测数据基于本地存储，保护您的隐私日记安全。
-- **数据管理**：支持历史记录的查看、单条/批量删除，以及数据导出与分享。
+### 多模态情绪检测
 
-## 🛠️ 技术栈
+长按底部指纹按钮，启动情绪分析流程：
+
+- **光照传感器** — 实时采集环境光照强度 (Lux)
+- **加速度计** — 检测设备抖动频率与用户活动状态（静止 / 微动 / 走动）
+- **陀螺仪** — 辅助检测手机稳定性
+- **麦克风** — 采集环境分贝 (dB)、语音基频 (Hz)、语调分析（平稳 / 起伏 / 紧张）
+- **云端语音识别** — 录音上传后识别文本内容，进行情感关键词分析
+
+### 评分算法
+
+采用 **文本一票否决制**：
+
+| 文本情感 | 基础分 | 传感器微调范围 | 最终范围 |
+|---------|-------|-------------|---------|
+| 强正面 | 80% | ±15% | 65% ~ 95% |
+| 强负面 | 20% | ±15% | 5% ~ 35% |
+| 中性/无语音 | 环境加权 | — | 35% ~ 65% |
+
+中性模式下使用线性加权：光照 30% + 稳定性 30% + 安静度 25% + 活动状态 15%。
+
+### 情绪记录与管理
+
+- 检测结果确认后存入本地数据库
+- 单条记录支持左滑删除，带确认对话框
+- 分析页支持一键清理所有本地数据
+- 所有数据仅存于设备本地，保护隐私
+
+### 数据分析与可视化
+
+- **能量趋势图** — 自定义 Canvas 绘制 7 日能量面积曲线
+- **情绪日历** — 月度 emoji 网格展示每日情绪状态
+- **快捷统计** — 本周记录数、平均能量、最佳状态
+- **周报分享** — 生成情绪周报海报，支持复制文字总结
+
+### 可交互 Mascot 角色
+
+- 屏幕右侧边缘爬行的角色，支持点击互动
+- 多种表情状态（开心、大笑、害羞、生气、困倦、惊讶）
+- 自动状态机：爬行 → 暂停 → 空闲（哈欠/挠头/环顾）→ 随机跳跃
+- 眨眼、挤压拉伸、肢体摆动等动画
+
+## 项目结构
+
+```
+app/src/main/java/com/example/sensordiary/
+├── MainActivity.kt                  # 入口 Activity，Compose 布局组装
+├── data/
+│   ├── AppDatabase.kt               # Room 数据库配置 (v4，含迁移脚本)
+│   └── MoodDao.kt                   # 数据访问层 (Flow 响应式)
+├── model/
+│   └── MoodRecord.kt                # 情绪记录实体 + 情绪选项数据类
+├── ui/
+│   ├── components/
+│   │   ├── BottomNavBar.kt          # 底部导航栏 + 指纹扫描按钮 + 脉冲动画
+│   │   ├── ExportModal.kt           # 情绪周报海报 + 文字总结复制
+│   │   ├── MascotCharacter.kt       # 可交互角色 (状态机 + 多表情 + 动画)
+│   │   ├── ResultModal.kt           # 检测结果弹窗 (能量条 + 语音分析 + 传感器数据)
+│   │   └── ScanLayer.kt             # 扫描动画层 (倒计时脉冲 + 信号条)
+│   ├── screens/
+│   │   ├── HomeScreen.kt            # 首页 (传感器网格 + 记录列表 + 左滑删除)
+│   │   └── AnalysisScreen.kt        # 分析页 (趋势图 + 日历网格 + 快捷统计)
+│   └── theme/
+│       ├── Color.kt                 # 自定义颜色常量
+│       └── Theme.kt                 # Material 3 主题配置
+└── util/
+    └── SensorHelper.kt              # 传感器管理 (光/加速度/陀螺仪/音频 + 自相关基频检测 + A 计权)
+```
+
+```
+design/
+└── design.html                      # 高保真交互原型
+```
+
+```
+image/
+├── effect.png                       # 应用真机效果图
+└── theory.png                       # 设计思路流程图
+```
+
+## 技术栈
 
 - **开发语言**：Kotlin
-- **UI 框架**：Jetpack Compose (声明式 UI)
-- **数据库**：Room (本地持久化存储)
-- **架构组件**：ViewModel, Coroutines, Flow, Navigation Compose
-- **设计规范**：Material 3 (Material Design)
-- **依赖管理**：Gradle (Kotlin DSL)
-
-## 🚀 快速开始
-
-1. **环境要求**：
-   - Android Studio Koala | 2024.1.1 或更高版本
-   - JDK 21
-   - Android 设备/模拟器 (API 24+)
-
-2. **构建步骤**：
-   - 克隆项目到本地。
-   - 在 Android Studio 中打开项目。
-   - 等待 Gradle 同步完成。
-   - 点击 `Run` 按钮安装到设备。
-
-## 📂 项目结构
-
-- `app/src/main/java`: 包含核心业务逻辑、UI 组件、数据层和视图模型。
-- `app/src/main/res`: 包含图片资源、字符串和主题配置。
-- `app/src/main/icon_source`: 存放原始应用图标。
-
-## 📄 许可证
-
-本项目采用 [MIT License](LICENSE) 许可。
+- **UI 框架**：Jetpack Compose
+- **数据库**：Room (本地持久化)
+- **架构模式**：MVVM + ViewModel + Coroutines + Flow
+- **网络请求**：OkHttp
+- **设计规范**：Material 3
